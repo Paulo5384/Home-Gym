@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Home Gym</title>
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{background:#0f172a;font-family:system-ui,sans-serif;color:#e2e8f0;}#root{max-width:480px;margin:0 auto;min-height:100vh;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { createElement as h, useState, useEffect, useRef } from "https://esm.sh/react@18";
+import { createRoot } from "https://esm.sh/react-dom@18/client";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBE-HajMyKZLRXgYAyCmzEfbsk-AutI9zI",
+  authDomain: "home-gym-559f6.firebaseapp.com",
+  projectId: "home-gym-559f6",
+  storageBucket: "home-gym-559f6.firebasestorage.app",
+  messagingSenderId: "385776345252",
+  appId: "1:385776345252:web:ace9c26e958654d6cb0631"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+// ─── POSTURE SVGs ─────────────────────────────────────────────
+function PostureSVG({pose, color="#8b5cf6", size=80}){
+  const c=color;
+  const props={fill:"none",stroke:c,strokeWidth:"2",strokeLinecap:"round",strokeLinejoin:"round"};
+  const poses={
+    squat:h("svg",{viewBox:"0 0 60 80",width:size,height:size},h("g",props,h("circle",{cx:"30",cy:"8",r:"6",fill:c,opacity:".8"}),h("line",{x1:"30",y1:"14",x2:"30",y2:"34"}),h("line",{x1:"30",y1:"20",x2:"18",y2:"26"}),h("line",{x1:"30",y1:"20",x2:"42",y2:"26"}),h("line",{x1:"30",y1:"34",x2:"18",y2:"52"}),h("line",{x1:"18",y1:"52",x2:"14",y2:"68"}),h("line",{x1:"30",y1:"34",x2:"42",y2:"52"}),h("line",{x1:"42",y1:"52",x2:"46",y2:"68"}),h("line",{x1:"10",y1:"72",x2:"50",y2:"72"}))),
+    squat_goblet:h("svg",{viewBox:"0 0 60 80",width:size,height:size},h("g",props,h("circle",{cx:"30",cy:"8",r:"6",fill:c,opacity:".8"}),h("line",{x1:"30",y1:"14",x2:"30",y2:"34"}),h("line",{x1:"30",y1:"20",x2:"20",y2:"28"}),h("line",{x1:"20",y1:"28",x2:"22",y2:"34"}),h("line",{x1:"30",y1:"20",x2:"40",y2:"28"}),h("line",{x1:"40",y1:"28",x2:"38",y2:"34"}),h("rect",{x:"22",y:"33",width:"16",height:"8",rx:"2",fill:c,opacity:".4"}),h("line",{x1:"30",y1:"34",x2:"18",y2:"54"}),h("line",{x1:"18",y1:"54",x2:"14",y2:"70"}),h("line",{x1:"30",y1:"34",x2:"42",y2:"54"}),h("line",{x1:"42",y1:"54",x2:"46",y2:"70"}),h("line",{x1:"10",y1:"74",x2:"50",y2:"74"}))),
+    lunge:h("svg",{viewBox:"0 0 70 80",width:size,height:size},h("g",props,h("circle",{cx:"30",cy:"8",r:"6",fill:c,opacity:".8"}),h("line",{x1:"30",y1:"14",x2:"30",y2:"34"}),h("line",{x1:"30",y1:"20",x2:"18",y2:"26"}),h("line",{x1:"30",y1:"20",x2:"42",y2:"26"}),h("line",{x1:"30",y1:"34",x2:"16",y2:"52"}),h("line",{x1:"16",y1:"52",x2:"10",y2:"68"}),h("line",{x1:"30",y1:"34",x2:"40",y2:"50"}),h("line",{x1:"40",y1:"50",x2:"50",y2:"56"}),h("line",{x1:"50",y1:"56",x2:"52",y2:"68"}),h("line",{x1:"6",y1:"72",x2:"30",y2:"72"}))),
+    bulgarian:h("svg",{viewBox:"0 0 80 80",width:size,height:size},h("g",props,h("circle",{cx:"28",cy:"8",r:"6",fill:c,opacity:".8"}),h("line",{x1:"28",y1:"14",x2:"28",y2:"34"}),h("line",{x1:"28",y1:"20",x2:"16",y2:"26"}),h("line",{x1:"28",y1:"20",x2:"40",y2:"26"}),h("line",{x1:"28",y1:"34",x2:"14",y2:"54"}),h("line",{x1:"14",y1:"54",x2:"10",y2:"70"}),h("line",{x1:"28",y1:"34",x2:"44",y2:"48"}),h("line",{x1:"44",y1:"48",x2:"58",y2:"42"}),h("rect",{x:"55",y:"52",width:"18",height:"10",rx:"2",fill:c,opacity:".4"}),h("line",{x1:"10",y1:"74",x2:"35",y2:"74"}))),
+    hinge_rdl:h("svg",{viewBox:"0 0 70 80",width:size,height:size},h("g",props,h("circle",{cx:"18",cy:"14",r:"6",fill:c,opacity:".8"}),h("line",{x1:"18",y1:"20",x2:"38",y2:"36"}),h("line",{x1:"28",y1:"28",x2:"20",y2:"38"}),h("line",{x1:"28",y1:"28",x2:"44",y2:"22"}),h("line",{x1:"38",y1:"36",x2:"30",y2:"54"}),h("line",{x1:"30",y1:"54",x2:"26",y2:"70"}),h("line",{x1:"38",y1:"36",x2:"46",y2:"54"}),h("line",{x1:"46",y1:"54",x2:"50",y2:"70"}),h("line",{x1:"20",y1:"74",x2:"56",y2:"74"}))),
+    good_morning:h("svg",{viewBox:"0 0 70 80",width:size,height:size},h("g",props,h("circle",{cx:"20",cy:"12",r:"6",fill:c,opacity:".8"}),h("line",{x1:"20",y1:"18",x2:"42",y2:"32"}),h("line",{x1:"20",y1:"22",x2:"8",y2:"28"}),h("line",{x1:"20",y1:"22",x2:"34",y2:"18"}),h("line",{x1:"42",y1:"32",x2:"36",y2:"52"}),h("line",{x1:"36",y1:"52",x2:"30",y2:"70"}),h("line",{x1:"42",y1:"32",x2:"50",y2:"50"}),h("line",{x1:"50",y1:"50",x2:"54",y2:"70"}),h("line",{x1:"24",y1:"74",x2:"58",y2:"74"}))),
+    pushup:h("svg",{viewBox:"0 0 80 60",width:size,height:size*60/80},h("g",props,h("circle",{cx:"12",cy:"14",r:"6",fill:c,opacity:".8"}),h("line",{x1:"12",y1:"20",x2:"50",y2:"30"}),h("line",{x1:"22",y1:"24",x2:"22",y2:"38"}),h("line",{x1:"22",y1:"38",x2:"14",y2:"44"}),h("line",{x1:"50",y1:"30",x2:"52",y2:"44"}),h("line",{x1:"10",y1:"48",x2:"56",y2:"48"}))),
+    pushup_narrow:h("svg",{viewBox:"0 0 80 60",width:size,height:size*60/80},h("g",props,h("circle",{cx:"12",cy:"14",r:"6",fill:c,opacity:".8"}),h("line",{x1:"12",y1:"20",x2:"50",y2:"30"}),h("line",{x1:"24",y1:"25",x2:"26",y2:"40"}),h("line",{x1:"26",y1:"40",x2:"16",y2:"46"}),h("line",{x1:"50",y1:"30",x2:"52",y2:"46"}),h("line",{x1:"10",y1:"50",x2:"56",y2:"50"}))),
+    overhead_press:h("svg",{viewBox:"0 0 60 90",width:size,height:size*90/60},h("g",props,h("circle",{cx:"30",cy:"8",r:"6",fill:c,opacity:".8"}),h("line",{x1:"30",y1:"14",x2:"30",y2:"40"}),h("line",{x1:"30",y1:"22",x2:"14",y2:"16"}),h("line",{x1:"14",y1:"16",x2:"10",y2:"8"}),h("line",{x1:"30",y1:"22",x2:"46",y2:"16"}),h("line",{x1:"46",y1:"16",x2:"50",y2:"8"}),h("line",{x1:"8",y1:"8",x2:"52",y2:"8"}),h("line",{x1:"30",y1:"40",x2:"22",y2:"56"}),h("line",{x1:"22",y1:"56",x2:"18",y2:"72"}),h("line",{x1:"30",y1:"40",x2:"38",y2:"56"}),h("line",{x1:"38",y1:"56",x2:"42",y2:"72"}),h("line",{x1:"14",y1:"76",x2:"46",y2:"76"}))),
+    chest_press:h("svg",{viewBox:"0 0 80 70",width:size,height:size*70/80},h("g",props,h("rect",{x:"10",y:"32",width:"60",height:"10",rx:"3",fill:c,opacity:".15"}),h("circle",{cx:"30",cy:"20",r:"6",fill:c,opacity:".8"}),h("line",{x1:"30",y1:"26",x2:"30",y2:"38"}),h("line",{x1:"30",y1:"30",x2:"14",y2:"26"}),h("line",{x1:"14",y1:"26",x2:"10",y2:"18"}),h("line",{x1:"30",y1:"30",x2:"46",y2:"26"}),h("line",{x1:"46",y1:"26",x2:"50",y2:"18"}),h("line",{x1:"30",y1:"38",x2:"24",y2:"52"}),h("line",{x1:"30",y1:"38",x2:"36",y2:"52"}))),
+    dip:h("svg",{viewBox:"0 0 70 80",width:size,height:size},h("g",props,h("line",{x1:"10",y1:"28",x2:"10",y2:"72"}),h("line",{x1:"60",y1:"28",x2:"60",y2:"72"}),h("circle",{cx:"35",cy:"10",r:"6",fill:c,opacity:".8"}),h("line",{x1:"35",y1:"16",x2:"35",y2:"38"}),h("line",{x1:"35",y1:"24",x2:"14",y2:"30"}),h("line",{x1:"14",y1:"30",x2:"10",y2:"28"}),h("line",{x1:"35",y1:"24",x2:"56",y2:"30"}),h("line",{x1:"56",y1:"30",x2:"60",y2:"28"}),h("line",{x1:"35",y1:"38",x2:"28",y2:"56"}),h("line",{x1:"35",y1:"38",x2:"42",y2:"56"}))),
+    row_standing:h("svg",{viewBox:"0 0 70 80",width:size,height:size},h("g",props,h("circle",{cx:"20",cy:"10",r:"6",fill:c,opacity:".8"}),h("line",{x1:"20",y1:"16",x2:"28",y2:"36"}),h("line",{x1:"24",y1:"26",x2:"10",y2:"32"}),h("line",{x1:"10",y1:"32",x2:"6",y2:"26"}),h("line",{x1:"24",y1:"26",x2:"42",y2:"22"}),h("line",{x1:"42",y1:"22",x2:"50",y2:"26"}),h("line",{x1:"28",y1:"36",x2:"20",y2:"54"}),h("line",{x1:"20",y1:"54",x2:"16",y2:"70"}),h("line",{x1:"28",y1:"36",x2:"36",y2:"54"}),h("line",{x1:"36",y1:"54",x2:"38",y2:"70"}),h("line",{x1:"10",y1:"74",x2:"44",y2:"74"}))),
+    row_bench:h("svg",{viewBox:"0 0 80 70",width:size,height:size*70/80},h("g",props,h("rect",{x:"8",y:"28",width:"46",height:"8",rx:"3",fill:c,opacity:".15"}),h("circle",{cx:"18",cy:"12",r:"6",fill:c,opacity:".8"}),h("line",{x1:"18",y1:"18",x2:"22",y2:"32"}),h("line",{x1:"20",y1:"24",x2:"8",y2:"28"}),h("line",{x1:"20",y1:"24",x2:"44",y2:"20"}),h("line",{x1:"44",y1:"20",x2:"50",y2:"26"}),h("line",{x1:"22",y1:"32",x2:"18",y2:"48"}),h("line",{x1:"18",y1:"48",x2:"14",y2:"60"}),h("line",{x1:"22",y1:"32",x2:"30",y2:"48"}),h("line",{x1:"30",y1:"48",x2:"32",y2:"60"}))),
+    pulldown:h("svg",{viewBox:"0 0 70 90",width:size,height:size*90/70},h("g",props,h("line",{x1:"5",y1:"8",x2:"65",y2:"8"}),h("line",{x1:"5",y1:"4",x2:"5",y2:"12"}),h("line",{x1:"65",y1:"4",x2:"65",y2:"12"}),h("line",{x1:"5",y1:"8",x2:"22",y2:"24"}),h("line",{x1:"65",y1:"8",x2:"48",y2:"24"}),h("circle",{cx:"35",cy:"30",r:"6",fill:c,opacity:".8"}),h("line",{x1:"35",y1:"36",x2:"35",y2:"56"}),h("line",{x1:"35",y1:"42",x2:"22",y2:"26"}),h("line",{x1:"35",y1:"42",x2:"48",y2:"26"}),h("line",{x1:"35",y1:"56",x2:"28",y2:"72"}),h("line",{x1:"35",y1:"56",x2:"42",y2:"72"}))),
+    face_pull_pose:h("svg",{viewBox:"0 0 80 70",width:size,height:size*70/80},h("g",props,h("line",{x1:"72",y1:"10",x2:"72",y2:"60"}),h("circle",{cx:"28",cy:"14",r:"6",fill:c,opacity:".8"}),h("line",{x1:"28",y1:"20",x2:"28",y2:"44"}),h("line",{x1:"28",y1:"28",x2:"60",y2:"24"}),h("line",{x1:"60",y1:"24",x2:"68",y2:"28"}),h("line",{x1:"28",y1:"28",x2:"14",y2:"34"}),h("line",{x1:"28",y1:"44",x2:"20",y2:"60"}),h("line",{x1:"28",y1:"44",x2:"36",y2:"60"}))),
+    curl_standing:h("svg",{viewBox:"0 0 60 80",width:size,height:size},h("g",props,h("circle",{cx:"30",cy:"8",r:"6",fill:c,opacity:".8"}),h("line",{x1:"30",y1:"14",x2:"30",y2:"36"}),h("line",{x1:"30",y1:"22",x2:"44",y2:"28"}),h("line",{x1:"44",y1:"28",x2:"46",y2:"20"}),h("line",{x1:"30",y1:"22",x2:"16",y2:"26"}),h("line",{x1:"16",y1:"26",x2:"14",y2:"38"}),h("line",{x1:"14",y1:"38",x2:"18",y2:"42"}),h("line",{x1:"30",y1:"36",x2:"22",y2:"54"}),h("line",{x1:"22",y1:"54",x2:"18",y2:"70"}),h("line",{x1:"30",y1:"36",x2:"38",y2:"54"}),h("line",{x1:"38",y1:"54",x2:"42",y2:"70"}),h("line",{x1:"14",y1:"74",x2:"46",y2:"74"}))),
+    tricep_extension:h("svg",{viewBox:"0 0 60 90",width:size,height:size*90/60},h("g",props,h("circle",{cx:"30",cy:"8",r:"6",fill:c,opacity:".8"}),h("line",{x1:"30",y1:"14",x2:"30",y2:"36"}),h("line",{x1:"30",y1:"22",x2:"16",y2:"18"}),h("line",{x1:"16",y1:"18",x2:"14",y2:"8"}),h("line",{x1:"30",y1:"22",x2:"44",y2:"18"}),h("line",{x1:"44",y1:"18",x2:"46",y2:"8"}),h("line",{x1:"12",y1:"8",x2:"48",y2:"8"}),h("line",{x1:"30",y1:"36",x2:"22",y2:"54"}),h("line",{x1:"22",y1:"54",x2:"18",y2:"70"}),h("line",{x1:"30",y1:"36",x2:"38",y2:"54"}),h("line",{x1:"38",y1:"54",x2:"42",y2:"70"}),h("line",{x1:"14",y1:"74",x2:"46",y2:"74"}))),
+    tricep_kickback:h("svg",{viewBox:"0 0 80 70",width:size,height:size*70/80},h("g",props,h("circle",{cx:"16",cy:"10",r:"6",fill:c,opacity:".8"}),h("line",{x1:"16",y1:"16",x2:"32",y2:"30"}),h("line",{x1:"24",y1:"22",x2:"14",y2:"28"}),h("line",{x1:"24",y1:"22",x2:"40",y2:"18"}),h("line",{x1:"40",y1:"18",x2:"64",y2:"20"}),h("line",{x1:"32",y1:"30",x2:"24",y2:"50"}),h("line",{x1:"24",y1:"50",x2:"20",y2:"64"}),h("line",{x1:"32",y1:"30",x2:"40",y2:"48"}),h("line",{x1:"40",y1:"48",x2:"42",y2:"64"}))),
+    glute_bridge:h("svg",{viewBox:"0 0 80 60",width:size,height:size*60/80},h("g",props,h("line",{x1:"6",y1:"54",x2:"74",y2:"54"}),h("circle",{cx:"16",cy:"22",r:"6",fill:c,opacity:".8"}),h("line",{x1:"16",y1:"28",x2:"22",y2:"40"}),h("line",{x1:"22",y1:"40",x2:"14",y2:"52"}),h("line",{x1:"22",y1:"40",x2:"46",y2:"32"}),h("line",{x1:"46",y1:"32",x2:"56",y2:"50"}),h("line",{x1:"16",y1:"34",x2:"6",y2:"40"}),h("line",{x1:"6",y1:"40",x2:"6",y2:"52"}))),
+    hip_thrust:h("svg",{viewBox:"0 0 80 70",width:size,height:size*70/80},h("g",props,h("rect",{x:"4",y:"36",width:"20",height:"12",rx:"3",fill:c,opacity:".2"}),h("circle",{cx:"22",cy:"16",r:"6",fill:c,opacity:".8"}),h("line",{x1:"22",y1:"22",x2:"26",y2:"38"}),h("line",{x1:"26",y1:"38",x2:"18",y2:"52"}),h("line",{x1:"26",y1:"38",x2:"52",y2:"30"}),h("line",{x1:"52",y1:"30",x2:"62",y2:"50"}),h("line",{x1:"14",y1:"28",x2:"6",y2:"34"}),h("line",{x1:"10",y1:"64",x2:"66",y2:"64"}))),
+    abduction:h("svg",{viewBox:"0 0 80 60",width:size,height:size*60/80},h("g",props,h("line",{x1:"6",y1:"52",x2:"74",y2:"52"}),h("circle",{cx:"28",cy:"18",r:"6",fill:c,opacity:".8"}),h("line",{x1:"28",y1:"24",x2:"30",y2:"40"}),h("line",{x1:"30",y1:"40",x2:"18",y2:"50"}),h("line",{x1:"30",y1:"40",x2:"48",y2:"36"}),h("line",{x1:"48",y1:"36",x2:"58",y2:"42"}),h("line",{x1:"28",y1:"30",x2:"16",y2:"36"}))),
+    plank:h("svg",{viewBox:"0 0 80 50",width:size,height:size*50/80},h("g",props,h("line",{x1:"4",y1:"44",x2:"76",y2:"44"}),h("circle",{cx:"68",cy:"14",r:"6",fill:c,opacity:".8"}),h("line",{x1:"68",y1:"20",x2:"14",y2:"34"}),h("line",{x1:"14",y1:"34",x2:"10",y2:"44"}),h("line",{x1:"40",y1:"27",x2:"40",y2:"44"}))),
+    ab_wheel:h("svg",{viewBox:"0 0 80 70",width:size,height:size*70/80},h("g",props,h("circle",{cx:"40",cy:"60",r:"8"}),h("line",{x1:"32",y1:"60",x2:"48",y2:"60"}),h("circle",{cx:"22",cy:"16",r:"6",fill:c,opacity:".8"}),h("line",{x1:"22",y1:"22",x2:"28",y2:"42"}),h("line",{x1:"28",y1:"42",x2:"20",y2:"58"}),h("line",{x1:"28",y1:"42",x2:"40",y2:"52"}),h("line",{x1:"22",y1:"28",x2:"10",y2:"24"}))),
+    bird_dog:h("svg",{viewBox:"0 0 90 60",width:size,height:size*60/90},h("g",props,h("circle",{cx:"44",cy:"20",r:"6",fill:c,opacity:".8"}),h("line",{x1:"44",y1:"26",x2:"44",y2:"40"}),h("line",{x1:"44",y1:"30",x2:"28",y2:"26"}),h("line",{x1:"44",y1:"30",x2:"60",y2:"26"}),h("line",{x1:"28",y1:"26",x2:"20",y2:"40"}),h("line",{x1:"60",y1:"26",x2:"68",y2:"40"}),h("line",{x1:"44",y1:"40",x2:"20",y2:"48"}),h("line",{x1:"20",y1:"48",x2:"8",y2:"44"}),h("line",{x1:"44",y1:"40",x2:"68",y2:"48"}),h("line",{x1:"68",y1:"48",x2:"80",y2:"44"}))),
+    dead_bug:h("svg",{viewBox:"0 0 80 60",width:size,height:size*60/80},h("g",props,h("circle",{cx:"40",cy:"24",r:"6",fill:c,opacity:".8"}),h("line",{x1:"40",y1:"30",x2:"40",y2:"44"}),h("line",{x1:"40",y1:"34",x2:"24",y2:"28"}),h("line",{x1:"24",y1:"28",x2:"12",y2:"20"}),h("line",{x1:"40",y1:"34",x2:"56",y2:"28"}),h("line",{x1:"56",y1:"28",x2:"68",y2:"36"}),h("line",{x1:"40",y1:"44",x2:"24",y2:"52"}),h("line",{x1:"24",y1:"52",x2:"14",y2:"48"}),h("line",{x1:"40",y1:"44",x2:"56",y2:"50"}),h("line",{x1:"56",y1:"50",x2:"68",y2:"44"}))),
+    treadmill:h("svg",{viewBox:"0 0 80 80",width:size,height:size},h("g",props,h("rect",{x:"10",y:"56",width:"60",height:"8",rx:"2",fill:c,opacity:".2"}),h("line",{x1:"16",y1:"56",x2:"20",y2:"20"}),h("line",{x1:"64",y1:"56",x2:"60",y2:"20"}),h("line",{x1:"20",y1:"20",x2:"60",y2:"20"}),h("circle",{cx:"36",cy:"10",r:"6",fill:c,opacity:".8"}),h("line",{x1:"36",y1:"16",x2:"38",y2:"34"}),h("line",{x1:"37",y1:"24",x2:"24",y2:"30"}),h("line",{x1:"24",y1:"30",x2:"22",y2:"38"}),h("line",{x1:"38",y1:"34",x2:"30",y2:"50"}),h("line",{x1:"38",y1:"34",x2:"44",y2:"48"}))),
+    leg_press_machine:h("svg",{viewBox:"0 0 80 70",width:size,height:size*70/80},h("g",props,h("rect",{x:"48",y:"8",width:"24",height:"40",rx:"3",fill:c,opacity:".15"}),h("circle",{cx:"18",cy:"20",r:"6",fill:c,opacity:".8"}),h("line",{x1:"18",y1:"26",x2:"16",y2:"46"}),h("line",{x1:"16",y1:"32",x2:"6",y2:"28"}),h("line",{x1:"16",y1:"46",x2:"10",y2:"60"}),h("line",{x1:"16",y1:"46",x2:"40",y2:"36"}),h("line",{x1:"40",y1:"36",x2:"48",y2:"28"}),h("line",{x1:"40",y1:"36",x2:"46",y2:"48"}))),
+    lateral_raise:h("svg",{viewBox:"0 0 70 80",width:size,height:size},h("g",props,h("circle",{cx:"35",cy:"8",r:"6",fill:c,opacity:".8"}),h("line",{x1:"35",y1:"14",x2:"35",y2:"36"}),h("line",{x1:"35",y1:"22",x2:"12",y2:"18"}),h("line",{x1:"12",y1:"18",x2:"8",y2:"24"}),h("line",{x1:"35",y1:"22",x2:"58",y2:"18"}),h("line",{x1:"58",y1:"18",x2:"62",y2:"24"}),h("line",{x1:"35",y1:"36",x2:"26",y2:"54"}),h("line",{x1:"26",y1:"54",x2:"22",y2:"70"}),h("line",{x1:"35",y1:"36",x2:"44",y2:"54"}),h("line",{x1:"44",y1:"54",x2:"48",y2:"70"}),h("line",{x1:"18",y1:"74",x2:"52",y2:"74"}))),
+    calf_raise:h("svg",{viewBox:"0 0 60 80",width:size,height:size},h("g",props,h("circle",{cx:"30",cy:"8",r:"6",fill:c,opacity:".8"}),h("line",{x1:"30",y1:"14",x2:"30",y2:"36"}),h("line",{x1:"30",y1:"22",x2:"18",y2:"26"}),h("line",{x1:"30",y1:"22",x2:"42",y2:"26"}),h("line",{x1:"30",y1:"36",x2:"22",y2:"52"}),h("line",{x1:"22",y1:"52",x2:"18",y2:"62"}),h("line",{x1:"18",y1:"62",x2:"20",y2:"70"}),h("line",{x1:"30",y1:"36",x2:"38",y2:"52"}),h("line",{x1:"38",y1:"52",x2:"42",y2:"62"}),h("line",{x1:"42",y1:"62",x2:"40",y2:"70"}),h("line",{x1:"14",y1:"70",x2:"46",y2:"70"}))),
+  };
+  return poses[pose]||poses["squat"];
+}
+
+// ─── LIBRARY ──────────────────────────────────────────────────
+const LIBRARY=[
+  {id:"squat_banda",name:"Sentadilla con banda",group:"Pierna",muscle:"Cuádriceps",secondary:"Glúteos, Isquiotibiales",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"squat",tips:"Rodillas siguen el pie. Talones en el suelo. Pecho arriba."},
+  {id:"squat_goblet",name:"Sentadilla Goblet",group:"Pierna",muscle:"Cuádriceps",secondary:"Core, Glúteos",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"squat_goblet",tips:"Mancuerna al pecho. Codos adentro. Profundidad máxima."},
+  {id:"squat_sumo",name:"Sentadilla Sumo",group:"Pierna",muscle:"Cuádriceps",secondary:"Glúteos, Aductores",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"squat",tips:"Pies más anchos que hombros, puntas hacia afuera."},
+  {id:"squat_smith",name:"Sentadilla en Smith",group:"Pierna",muscle:"Cuádriceps",secondary:"Glúteos",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"squat",tips:"Pies ligeramente adelantados. Controla la bajada."},
+  {id:"leg_press",name:"Prensa de piernas",group:"Pierna",muscle:"Cuádriceps",secondary:"Glúteos, Isquiotibiales",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"leg_press_machine",tips:"Pies al ancho de hombros. No bloquees las rodillas arriba."},
+  {id:"bulgara",name:"Sentadilla búlgara",group:"Pierna",muscle:"Cuádriceps",secondary:"Glúteos, Core",equip:"Casa",equipIcon:"🏠",diff:"Avanzado",pose:"bulgarian",tips:"Pie trasero elevado. Baja verticalmente. Rodilla no pasa el pie."},
+  {id:"rdl_banda",name:"Peso muerto rumano banda",group:"Pierna",muscle:"Isquiotibiales",secondary:"Glúteos, Lumbar",equip:"Casa",equipIcon:"🏠",diff:"Intermedio",pose:"hinge_rdl",tips:"Bisagra de cadera pura. Espalda neutra. Siente el estiramiento."},
+  {id:"rdl_manc",name:"Peso muerto rumano mancuerna",group:"Pierna",muscle:"Isquiotibiales",secondary:"Glúteos, Lumbar",equip:"Casa",equipIcon:"🏠",diff:"Intermedio",pose:"hinge_rdl",tips:"Mancuernas cerca del cuerpo. Cadera atrás, no abajo."},
+  {id:"hip_thrust",name:"Hip Thrust",group:"Pierna",muscle:"Glúteos",secondary:"Isquiotibiales, Core",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"hip_thrust",tips:"Espalda apoyada en banco. Empuja con talones. Aprieta arriba."},
+  {id:"puente_gluteos",name:"Puente de glúteos",group:"Pierna",muscle:"Glúteos",secondary:"Isquiotibiales, Core",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"glute_bridge",tips:"Talones al suelo. 2 seg isométrico arriba. Banda opcional."},
+  {id:"zancada",name:"Zancadas alternadas",group:"Pierna",muscle:"Cuádriceps",secondary:"Glúteos, Isquiotibiales",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"lunge",tips:"Paso largo. Rodilla trasera casi toca el suelo. Tronco erguido."},
+  {id:"buenos_dias",name:"Buenos días con banda",group:"Pierna",muscle:"Isquiotibiales",secondary:"Lumbar, Glúteos",equip:"Casa",equipIcon:"🏠",diff:"Intermedio",pose:"good_morning",tips:"Bisagra. Rodillas ligeramente flexionadas. Espalda neutra."},
+  {id:"calf_raise",name:"Elevación de talones",group:"Pierna",muscle:"Gemelos",secondary:"Sóleo",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"calf_raise",tips:"Rango completo. Pausa arriba. Puedes hacerlo unilateral."},
+  {id:"abduccion",name:"Abducción con minibanda",group:"Pierna",muscle:"Glúteos",secondary:"Piriforme, TFL",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"abduction",tips:"Banda sobre rodillas. Activa glúteo medio."},
+  {id:"leg_curl_gym",name:"Curl femoral máquina",group:"Pierna",muscle:"Isquiotibiales",secondary:"Gemelos",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"hinge_rdl",tips:"Contrae isquio al máximo. Baja controlado. No arquees la cadera."},
+  {id:"pushup",name:"Flexiones",group:"Pecho",muscle:"Pecho",secondary:"Tríceps, Hombro anterior",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"pushup",tips:"Cuerpo recto, codos a 45°, baja hasta casi tocar el suelo."},
+  {id:"pushup_narrow",name:"Flexiones cerradas",group:"Pecho",muscle:"Tríceps",secondary:"Pecho, Hombro anterior",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"pushup_narrow",tips:"Manos bajo hombros. Codos pegados. Enfatiza tríceps."},
+  {id:"chest_fly_banda",name:"Apertura pecho banda",group:"Pecho",muscle:"Pecho",secondary:"Bíceps (cabeza corta)",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"chest_press",tips:"Codos ligeramente flexionados. Movimiento en arco."},
+  {id:"press_banca_manc",name:"Press banca mancuerna",group:"Pecho",muscle:"Pecho",secondary:"Tríceps, Hombro anterior",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"chest_press",tips:"Mancuernas a la altura del pecho. Empuja hacia arriba y adentro."},
+  {id:"press_banca_gym",name:"Press banca máquina",group:"Pecho",muscle:"Pecho",secondary:"Tríceps, Hombro anterior",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"chest_press",tips:"Controla la bajada. Pecho, no hombros. Escápulas retraídas."},
+  {id:"dip",name:"Fondos (dips)",group:"Pecho",muscle:"Pecho",secondary:"Tríceps, Hombro anterior",equip:"Casa",equipIcon:"🏠",diff:"Intermedio",pose:"dip",tips:"Inclínate hacia adelante para enfatizar pecho. Baja controlado."},
+  {id:"remo_banda",name:"Remo con banda",group:"Espalda",muscle:"Espalda media",secondary:"Bíceps, Romboides",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"row_standing",tips:"Codos al cuerpo. Aprieta escápulas al final."},
+  {id:"remo_manc",name:"Remo mancuerna unilateral",group:"Espalda",muscle:"Espalda media",secondary:"Bíceps, Romboides",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"row_bench",tips:"Apoya rodilla y mano en banco. Codo hacia el techo."},
+  {id:"jalon_banda",name:"Jalón con banda",group:"Espalda",muscle:"Dorsal",secondary:"Bíceps, Romboides",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"pulldown",tips:"Pecho arriba. Codo hacia la cadera. No uses impulso."},
+  {id:"jalon_polea",name:"Jalón al pecho polea",group:"Espalda",muscle:"Dorsal",secondary:"Bíceps, Romboides",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"pulldown",tips:"Agarre ancho. Lleva la barra a la clavícula. Pecho afuera."},
+  {id:"remo_polea",name:"Remo en polea baja",group:"Espalda",muscle:"Espalda media",secondary:"Bíceps, Romboides",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"row_standing",tips:"Siéntate erguido. Tira hacia el ombligo. Escápulas adentro."},
+  {id:"face_pull",name:"Face Pull con banda",group:"Espalda",muscle:"Hombro posterior",secondary:"Trapecio, Manguito",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"face_pull_pose",tips:"Codos altos. Manos a la cara. Fundamental para salud del hombro."},
+  {id:"pullover_manc",name:"Pullover mancuerna",group:"Espalda",muscle:"Dorsal",secondary:"Serrato, Pecho",equip:"Casa",equipIcon:"🏠",diff:"Intermedio",pose:"pulldown",tips:"Arco amplio. No bajes más allá de la cabeza. Core activo."},
+  {id:"press_militar",name:"Press militar banda",group:"Hombros",muscle:"Hombro anterior",secondary:"Tríceps, Trapecio",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"overhead_press",tips:"Banda bajo los pies. Empuja recto arriba. Core activo."},
+  {id:"press_manc_hombro",name:"Press mancuerna hombro",group:"Hombros",muscle:"Hombro anterior",secondary:"Tríceps, Trapecio",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"overhead_press",tips:"Mancuernas a la altura de las orejas. Empuja y rota ligeramente."},
+  {id:"vuelo_lateral",name:"Vuelo lateral",group:"Hombros",muscle:"Hombro lateral",secondary:"Trapecio",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"lateral_raise",tips:"Codos ligeramente flexionados. Sube hasta altura del hombro."},
+  {id:"vuelo_posterior",name:"Vuelo posterior",group:"Hombros",muscle:"Hombro posterior",secondary:"Romboides",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"face_pull_pose",tips:"Torso inclinado. Brazos al costado. Aprieta escápulas."},
+  {id:"press_arnold",name:"Press Arnold",group:"Hombros",muscle:"Hombro anterior",secondary:"Hombro lateral, Tríceps",equip:"Casa",equipIcon:"🏠",diff:"Intermedio",pose:"overhead_press",tips:"Rotación completa. Palmas al frente arriba, al pecho abajo."},
+  {id:"press_maquina_hombro",name:"Press máquina hombro",group:"Hombros",muscle:"Hombro anterior",secondary:"Tríceps",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"overhead_press",tips:"Ajusta el asiento. Control en la bajada. No bloquees codos."},
+  {id:"curl_banda",name:"Curl con banda",group:"Bíceps",muscle:"Bíceps",secondary:"Braquial",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"curl_standing",tips:"Codos fijos. Muñeca neutra. No balancees el torso."},
+  {id:"curl_manc",name:"Curl mancuerna",group:"Bíceps",muscle:"Bíceps",secondary:"Braquial",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"curl_standing",tips:"Supina la muñeca al subir. Pausa arriba. Baja controlado."},
+  {id:"curl_martillo",name:"Curl martillo",group:"Bíceps",muscle:"Bíceps",secondary:"Braquiorradial",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"curl_standing",tips:"Agarre neutro (pulgar arriba). Énfasis en braquial."},
+  {id:"curl_concentrado",name:"Curl concentrado",group:"Bíceps",muscle:"Bíceps",secondary:"Braquial",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"curl_standing",tips:"Codo apoyado en muslo. Rango completo. Contracción máxima."},
+  {id:"curl_polea",name:"Curl en polea baja",group:"Bíceps",muscle:"Bíceps",secondary:"Braquial",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"curl_standing",tips:"Tensión constante. No muevas los codos. Control total."},
+  {id:"curl_maquina",name:"Curl en máquina",group:"Bíceps",muscle:"Bíceps",secondary:"Braquial",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"curl_standing",tips:"Ajusta bien los codos al pivote. Rango completo sin trampa."},
+  {id:"ext_triceps",name:"Extensión tríceps banda",group:"Tríceps",muscle:"Tríceps",secondary:"Hombro posterior",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"tricep_extension",tips:"Codos fijos altos. Solo se mueve el antebrazo."},
+  {id:"patada_triceps",name:"Patada tríceps",group:"Tríceps",muscle:"Tríceps",secondary:"Hombro posterior",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"tricep_kickback",tips:"Torso inclinado. Extiende completamente. Pausa 1 seg."},
+  {id:"triceps_polea",name:"Extensión polea alta",group:"Tríceps",muscle:"Tríceps",secondary:"Hombro posterior",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"tricep_extension",tips:"Codos pegados al cuerpo. Extiende completamente hacia abajo."},
+  {id:"triceps_frances",name:"Press francés mancuerna",group:"Tríceps",muscle:"Tríceps",secondary:"Core (estabilizador)",equip:"Casa",equipIcon:"🏠",diff:"Intermedio",pose:"tricep_extension",tips:"Acostado. Baja mancuernas a la frente. Codos quietos."},
+  {id:"dip_triceps",name:"Fondos de tríceps",group:"Tríceps",muscle:"Tríceps",secondary:"Pecho, Hombro anterior",equip:"Casa",equipIcon:"🏠",diff:"Intermedio",pose:"dip",tips:"Cuerpo recto. Codos hacia atrás. Baja controlado."},
+  {id:"triceps_maquina",name:"Máquina de tríceps",group:"Tríceps",muscle:"Tríceps",secondary:"Hombro posterior",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"tricep_extension",tips:"Ajusta el asiento. Extensión completa. Control en la vuelta."},
+  {id:"rueda_abd",name:"Rueda abdominal",group:"Core",muscle:"Core",secondary:"Lumbar, Serrato, Hombros",equip:"Casa",equipIcon:"🏠",diff:"Avanzado",pose:"ab_wheel",tips:"Salida lenta. No dejes caer la cadera. Empieza con rango corto."},
+  {id:"plancha",name:"Plancha frontal",group:"Core",muscle:"Core",secondary:"Hombros, Glúteos",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"plank",tips:"Cuerpo recto. Activa glúteos y core. No eleves la cadera."},
+  {id:"bird_dog",name:"Bird Dog",group:"Core",muscle:"Core",secondary:"Lumbar, Glúteos",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"bird_dog",tips:"Extiende brazo y pierna opuestos. Control. Sin rotar la cadera."},
+  {id:"dead_bug",name:"Dead Bug",group:"Core",muscle:"Core",secondary:"Lumbar, Core profundo",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"dead_bug",tips:"Espalda baja pegada al suelo todo el tiempo. Movimiento lento."},
+  {id:"crunch",name:"Crunch abdominal",group:"Core",muscle:"Core",secondary:"Core",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"plank",tips:"No jales el cuello. Contrae el abdomen al subir."},
+  {id:"sentadilla_aire",name:"Sentadilla al aire 2 min",group:"Core",muscle:"Cuádriceps",secondary:"Glúteos, Cardio",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"squat",tips:"Ritmo continuo 2 minutos. Mantén técnica aunque fatigues."},
+  {id:"caminata_lateral",name:"Caminata lateral minibanda",group:"Core",muscle:"Glúteos",secondary:"Glúteo medio, TFL",equip:"Casa",equipIcon:"🏠",diff:"Básico",pose:"abduction",tips:"Banda sobre rodillas. Pasos laterales controlados."},
+  {id:"treadmill",name:"Caminata trotadora",group:"Cardio",muscle:"Cardio",secondary:"Piernas",equip:"Gym",equipIcon:"🏋️",diff:"Básico",pose:"treadmill",tips:"Velocidad cómoda y progresiva. 4.5 a 5.5 km/h."},
+];
+
+const GROUPS=["Todos","Pierna","Pecho","Espalda","Hombros","Bíceps","Tríceps","Core","Cardio"];
+const EQUIP_FILTER=["Todos","Casa 🏠","Gym 🏋️"];
+const DIFF_C={Básico:"#22c55e",Intermedio:"#f59e0b",Avanzado:"#ef4444"};
+const GROUP_C={Pierna:"#f59e0b",Pecho:"#ef4444",Espalda:"#3b82f6",Hombros:"#8b5cf6",Bíceps:"#22c55e",Tríceps:"#10b981",Core:"#06b6d4",Cardio:"#f97316",default:"#64748b"};
+
+// ─── PLANS ────────────────────────────────────────────────────
+const PAULO_PLAN={
+  "Día A":{label:"Día A — Pecho + Espalda + Piernas + Core",blocks:[
+    {name:"Pecho + Espalda",exercises:[
+      {id:"a1",libId:"pushup",name:"Flexiones",sets:4,reps:"10-20",rest:60},
+      {id:"a2",libId:"remo_banda",name:"Remo con banda",sets:4,reps:"12-15",rest:60},
+    ]},
+    {name:"Cuádriceps + Isquiotibiales",exercises:[
+      {id:"a3",libId:"squat_banda",name:"Sentadilla con banda",sets:4,reps:"15",rest:90},
+      {id:"a4",libId:"rdl_banda",name:"Peso muerto rumano banda",sets:4,reps:"15",rest:90},
+    ]},
+    {name:"Core",exercises:[
+      {id:"a5",libId:"rueda_abd",name:"Rueda abdominal",sets:3,reps:"max",rest:60},
+      {id:"a6",libId:"sentadilla_aire",name:"Sentadilla al aire 2 min",sets:1,reps:"2 min",rest:0},
+    ]},
+  ]},
+  "Día B":{label:"Día B — Pierna + Hombros + Brazos",blocks:[
+    {name:"Pierna completa",exercises:[
+      {id:"b1",libId:"zancada",name:"Zancadas alternadas",sets:4,reps:"10/pierna",rest:90},
+      {id:"b2",libId:"puente_gluteos",name:"Puente de glúteos",sets:4,reps:"15-20",rest:60},
+    ]},
+    {name:"Hombros",exercises:[
+      {id:"b3",libId:"press_militar",name:"Press militar banda",sets:4,reps:"12-15",rest:60},
+      {id:"b4",libId:"face_pull",name:"Face Pull",sets:4,reps:"15",rest:60},
+    ]},
+    {name:"Bíceps + Tríceps",exercises:[
+      {id:"b5",libId:"curl_banda",name:"Curl con banda",sets:3,reps:"15",rest:60},
+      {id:"b6",libId:"ext_triceps",name:"Extensión tríceps",sets:3,reps:"15",rest:60},
+    ]},
+  ]},
+  "Día C":{label:"Día C — Pecho + Espalda + Pierna unilateral + Brazos + Core",blocks:[
+    {name:"Pecho + Espalda",exercises:[
+      {id:"c1",libId:"pushup_narrow",name:"Flexiones cerradas",sets:4,reps:"10-15",rest:60},
+      {id:"c2",libId:"jalon_banda",name:"Jalón con banda",sets:4,reps:"12-15",rest:60},
+    ]},
+    {name:"Pierna unilateral",exercises:[
+      {id:"c3",libId:"bulgara",name:"Sentadilla búlgara",sets:3,reps:"10/pierna",rest:90},
+      {id:"c4",libId:"buenos_dias",name:"Buenos días con banda",sets:3,reps:"15",rest:60},
+    ]},
+    {name:"Bíceps + Tríceps",exercises:[
+      {id:"c5",libId:"curl_martillo",name:"Curl martillo",sets:3,reps:"15",rest:60},
+      {id:"c6",libId:"patada_triceps",name:"Patada tríceps",sets:3,reps:"15",rest:60},
+    ]},
+    {name:"Core",exercises:[
+      {id:"c7",libId:"rueda_abd",name:"Rueda abdominal",sets:3,reps:"max",rest:60},
+    ]},
+  ]},
+};
+
+const CARO_PLAN={
+  "Sesión Vulcano":{label:"Sesión Vulcano — Plan Personalizado",blocks:[
+    {name:"① Entrada en calor",exercises:[
+      {id:"cw1",libId:"treadmill",name:"Caminata trotadora 5 min",sets:1,reps:"5 min",rest:0},
+    ]},
+    {name:"② Movilidad y activación",exercises:[
+      {id:"cm1",libId:"bird_dog",name:"Bird Dog",sets:2,reps:"8/lado",rest:30},
+      {id:"cm2",libId:"dead_bug",name:"Dead Bug",sets:2,reps:"8/lado",rest:30},
+      {id:"cm3",libId:"caminata_lateral",name:"Caminata lateral minibanda",sets:2,reps:"10 pasos/lado",rest:30},
+      {id:"cm4",libId:"plancha",name:"Plancha frontal",sets:2,reps:"20-30 seg",rest:30},
+    ]},
+    {name:"③ Bloque principal de fuerza",exercises:[
+      {id:"cf1",libId:"squat_goblet",name:"Sentadilla Goblet 8kg",sets:3,reps:"10-12",rest:90},
+      {id:"cf2",libId:"rdl_manc",name:"Peso muerto rumano 8kg/mano",sets:3,reps:"10",rest:90},
+      {id:"cf3",libId:"jalon_polea",name:"Jalón al pecho polea",sets:3,reps:"8-12",rest:90},
+      {id:"cf4",libId:"press_banca_gym",name:"Press banca mancuerna 6kg",sets:3,reps:"10-12",rest:90},
+      {id:"cf5",libId:"hip_thrust",name:"Hip Thrust 15-20kg",sets:3,reps:"12",rest:90},
+    ]},
+    {name:"④ Cardio final",exercises:[
+      {id:"cc1",libId:"treadmill",name:"Cardio continuo 10 min",sets:1,reps:"10 min",rest:0},
+    ]},
+  ]},
+};
+
+// ─── AUDIO ────────────────────────────────────────────────────
+function beep(ctx,f=880,d=0.15,v=0.4){if(!ctx)return;const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=f;g.gain.setValueAtTime(v,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+d);o.start();o.stop(ctx.currentTime+d);}
+function beepEnd(ctx){if(!ctx)return;[440,550,660].forEach((f,i)=>setTimeout(()=>beep(ctx,f,0.2,0.5),i*180));}
+
+const TODAY=()=>new Date().toISOString().slice(0,10);
+const weekKey=d=>{const dt=new Date(d),j=new Date(dt.getFullYear(),0,1);return`${dt.getFullYear()}-W${String(Math.ceil(((dt-j)/86400000+j.getDay()+1)/7)).padStart(2,'0')}`;};
+const monthKey=d=>d.slice(0,7);
+const uid=()=>Math.random().toString(36).slice(2,8);
+
+const PROFILES={
+  paulo:{name:"Paulo",emoji:"💪",color:"#3b82f6",note:"42 años · Banda + peso corporal · Días A/B/C",plan:PAULO_PLAN},
+  caro:{name:"Caro",emoji:"🌸",color:"#ec4899",note:"Kinesióloga · Gym + casa · ⚠️ Cuidar cadera derecha",plan:CARO_PLAN},
+};
+
+// ─── MAIN APP ─────────────────────────────────────────────────
+function App(){
+  const [profile,setProfile]=useState(null);
+  const [tab,setTab]=useState("today");
+  const [plan,setPlan]=useState({});
+  const [log,setLog]=useState({});
+  const [activeDay,setActiveDay]=useState("");
+  const [sessionDate,setSessionDate]=useState(TODAY());
+  const [editMode,setEditMode]=useState(false);
+  const [timerSecs,setTimerSecs]=useState(60);
+  const [timerLeft,setTimerLeft]=useState(null);
+  const [timerRunning,setTimerRunning]=useState(false);
+  const [sw,setSw]=useState(0);
+  const [swOn,setSwOn]=useState(false);
+  const [notif,setNotif]=useState(null);
+  const [libGroup,setLibGroup]=useState("Todos");
+  const [libEquip,setLibEquip]=useState("Todos");
+  const [libSearch,setLibSearch]=useState("");
+  const [libModal,setLibModal]=useState(null);
+  const [swapTarget,setSwapTarget]=useState(null);
+  const [addTarget,setAddTarget]=useState(null);
+  const [histView,setHistView]=useState("fecha");
+  const [syncing,setSyncing]=useState(false);
+  const [syncStatus,setSyncStatus]=useState("");
+  const audioCtx=useRef(null);
+  const timerRef=useRef(null);
+  const swRef=useRef(null);
+  const saveTimer=useRef(null);
+
+  useEffect(()=>{
+    if(!profile)return;
+    setSyncing(true);
+    const load=async()=>{
+      try{
+        const pd=await getDoc(doc(db,"homegym",`${profile}_plan`));
+        const ld=await getDoc(doc(db,"homegym",`${profile}_log`));
+        const lp=pd.exists()?pd.data().value:PROFILES[profile].plan;
+        const ll=ld.exists()?ld.data().value:{};
+        setPlan(lp);setLog(ll);setActiveDay(Object.keys(lp)[0]||"");
+      }catch{
+        const sp=localStorage.getItem(`hg_plan_${profile}`);
+        const sl=localStorage.getItem(`hg_log_${profile}`);
+        const lp=sp?JSON.parse(sp):PROFILES[profile].plan;
+        setPlan(lp);setLog(sl?JSON.parse(sl):{});setActiveDay(Object.keys(lp)[0]||"");
+      }
+      setSyncing(false);
+    };
+    load();
+  },[profile]);
+
+  useEffect(()=>{
+    if(!profile||!Object.keys(plan).length)return;
+    localStorage.setItem(`hg_plan_${profile}`,JSON.stringify(plan));
+    clearTimeout(saveTimer.current);
+    saveTimer.current=setTimeout(async()=>{
+      try{await setDoc(doc(db,"homegym",`${profile}_plan`),{value:plan});setSyncStatus("saved");setTimeout(()=>setSyncStatus(""),2000);}
+      catch{setSyncStatus("error");setTimeout(()=>setSyncStatus(""),3000);}
+    },1500);
+  },[plan,profile]);
+
+  useEffect(()=>{
+    if(!profile)return;
+    localStorage.setItem(`hg_log_${profile}`,JSON.stringify(log));
+    clearTimeout(saveTimer.current);
+    saveTimer.current=setTimeout(async()=>{
+      try{await setDoc(doc(db,"homegym",`${profile}_log`),{value:log});setSyncStatus("saved");setTimeout(()=>setSyncStatus(""),2000);}
+      catch{setSyncStatus("error");setTimeout(()=>setSyncStatus(""),3000);}
+    },1500);
+  },[log,profile]);
+
+  const pColor=profile?PROFILES[profile].color:"#3b82f6";
+  const getAudio=()=>{if(!audioCtx.current)audioCtx.current=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.current.state==="suspended")audioCtx.current.resume();return audioCtx.current;};
+  const notify=(msg,type="ok")=>{setNotif({msg,type});setTimeout(()=>setNotif(null),2500);};
+
+  useEffect(()=>{
+    if(timerRunning&&timerLeft>0){timerRef.current=setTimeout(()=>setTimerLeft(l=>{if(l<=1){setTimerRunning(false);beepEnd(getAudio());return 0;}if(l<=4)beep(getAudio(),660,0.1,0.3);return l-1;}),1000);}
+    return()=>clearTimeout(timerRef.current);
+  },[timerRunning,timerLeft]);
+
+  useEffect(()=>{if(swOn)swRef.current=setInterval(()=>setSw(s=>s+1),1000);else clearInterval(swRef.current);return()=>clearInterval(swRef.current);},[swOn]);
+
+  const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  const lk=(date,dk,exId,si)=>`${date}__${dk}__${exId}__s${si}`;
+  const getSet=(exId,si)=>{if(!activeDay)return{done:false,reps:"",weight:"",note:""};const k=lk(sessionDate,activeDay,exId,si);return log[k]||{done:false,reps:"",weight:"",note:""};};
+  const updSet=(exId,si,field,val)=>{const k=lk(sessionDate,activeDay,exId,si);setLog(l=>({...l,[k]:{...getSet(exId,si),[field]:val}}));};
+  const togDone=(exId,si)=>{const cur=getSet(exId,si);updSet(exId,si,"done",!cur.done);if(!cur.done)beep(getAudio(),523,0.12,0.3);};
+
+  const sessProg=()=>{if(!activeDay||!plan[activeDay])return{total:0,done:0,pct:0};let total=0,done=0;plan[activeDay].blocks.forEach(b=>b.exercises.forEach(ex=>{for(let i=0;i<ex.sets;i++){total++;if(getSet(ex.id,i).done)done++;}}));return{total,done,pct:total?Math.round(done/total*100):0};};
+  const {total,done,pct}=sessProg();
+  const timerColor=timerLeft!=null?(timerLeft<=5?"#ef4444":timerLeft<=15?"#f59e0b":"#22c55e"):"#22c55e";
+  const allLogKeys=Object.keys(log);
+  const sessionDates=[...new Set(allLogKeys.map(k=>k.split("__")[0]))].sort().reverse();
+
+  const getSessionMuscles=date=>{const muscles=new Set();allLogKeys.filter(k=>k.startsWith(date)&&log[k].done).forEach(k=>{const[,dk,exId]=k.split("__");const dp=plan[dk];if(!dp)return;const ex=dp.blocks.flatMap(b=>b.exercises).find(e=>e.id===exId);if(!ex)return;const le=LIBRARY.find(l=>l.id===ex.libId);if(le)muscles.add(le.group||le.muscle);});return[...muscles];};
+  const muscleHistory=()=>{const byM={};sessionDates.forEach(date=>{getSessionMuscles(date).forEach(m=>{if(!byM[m])byM[m]=[];byM[m].push(date);});});return byM;};
+  const muscleFreq=()=>{const freq={};allLogKeys.forEach(k=>{if(!log[k].done)return;const[,dk,exId]=k.split("__");const dp=plan[dk];if(!dp)return;const ex=dp.blocks.flatMap(b=>b.exercises).find(e=>e.id===exId);if(!ex)return;const le=LIBRARY.find(l=>l.id===ex.libId);if(!le)return;freq[le.group||le.muscle]=(freq[le.group||le.muscle]||0)+1;});return freq;};
+  const mFreq=muscleFreq();
+
+  const filteredLib=LIBRARY.filter(ex=>{
+    const gOk=libGroup==="Todos"||ex.group===libGroup;
+    const eOk=libEquip==="Todos"||(libEquip.includes("Casa")&&ex.equip==="Casa")||(libEquip.includes("Gym")&&ex.equip==="Gym");
+    const sOk=!libSearch||ex.name.toLowerCase().includes(libSearch.toLowerCase())||ex.muscle.toLowerCase().includes(libSearch.toLowerCase());
+    return gOk&&eOk&&sOk;
+  });
+
+  const swapEx=le=>{if(!swapTarget)return;const{dayKey,blockIdx,exIdx}=swapTarget;setPlan(p=>{const n=JSON.parse(JSON.stringify(p));const old=n[dayKey].blocks[blockIdx].exercises[exIdx];n[dayKey].blocks[blockIdx].exercises[exIdx]={...old,libId:le.id,name:le.name};return n;});notify(`↔ ${le.name}`);setSwapTarget(null);setLibModal(null);setTab("today");};
+  const addExFromLib=le=>{if(!addTarget)return;const newEx={id:uid(),libId:le.id,name:le.name,sets:3,reps:"12-15",rest:60};setPlan(p=>{const n=JSON.parse(JSON.stringify(p));if(addTarget==="newBlock"){n[activeDay].blocks.push({name:"Bloque nuevo",exercises:[newEx]});}else{const{dayKey,blockIdx}=addTarget;n[dayKey].blocks[blockIdx].exercises.push(newEx);}return n;});notify(`✓ ${le.name} agregado`);setAddTarget(null);setLibModal(null);setTab("today");};
+  const delEx=(dk,bi,ei)=>{setPlan(p=>{const n=JSON.parse(JSON.stringify(p));n[dk].blocks[bi].exercises.splice(ei,1);return n;});};
+  const updEx=(dk,bi,ei,field,val)=>{setPlan(p=>{const n=JSON.parse(JSON.stringify(p));n[dk].blocks[bi].exercises[ei][field]=field==="sets"?parseInt(val)||1:val;return n;});};
+
+  const s=(...styles)=>Object.assign({},...styles);
+  const base={fontFamily:"system-ui,sans-serif",background:"#0f172a",minHeight:"100vh",color:"#e2e8f0"};
+
+  // ── PROFILE SELECT ──────────────────────────────────────────
+  if(!profile)return h("div",{style:s(base,{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24})},
+    h("div",{style:{fontSize:32,marginBottom:8}},"🏋️"),
+    h("div",{style:{fontSize:22,fontWeight:800,color:"#f1f5f9",marginBottom:4}},"Home Gym"),
+    h("div",{style:{fontSize:13,color:"#64748b",marginBottom:40}},"¿Quién entrena hoy?"),
+    Object.entries(PROFILES).map(([key,p])=>h("button",{key,onClick:()=>{setProfile(key);setTab("today");},style:{width:"100%",maxWidth:320,background:"#1e293b",border:`2px solid ${p.color}`,borderRadius:14,padding:20,marginBottom:14,cursor:"pointer",textAlign:"left"}},
+      h("div",{style:{fontSize:28,marginBottom:6}},p.emoji),
+      h("div",{style:{fontSize:20,fontWeight:800,color:"#f1f5f9"}},p.name),
+      h("div",{style:{fontSize:12,color:"#64748b",marginTop:4}},p.note)
+    ))
+  );
+
+  const isLibraryAction=swapTarget||addTarget;
+
+  return h("div",{style:s(base,{maxWidth:480,margin:"0 auto"})},
+    notif&&h("div",{style:{position:"fixed",top:12,left:"50%",transform:"translateX(-50%)",background:notif.type==="ok"?"#166534":"#7f1d1d",padding:"9px 20px",borderRadius:8,zIndex:1000,fontSize:13,fontWeight:600,whiteSpace:"nowrap"}},notif.msg),
+
+    // LIB MODAL
+    libModal&&h("div",{style:{position:"fixed",inset:0,background:"#000b",zIndex:900,display:"flex",alignItems:"flex-end"},onClick:()=>setLibModal(null)},
+      h("div",{style:{background:"#1e293b",borderRadius:"16px 16px 0 0",padding:20,width:"100%",maxWidth:480,margin:"0 auto",border:"1px solid #334155"},onClick:e=>e.stopPropagation()},
+        h("div",{style:{display:"flex",gap:14,alignItems:"flex-start",marginBottom:12}},
+          h("div",{style:{background:"#0f172a",borderRadius:10,padding:8,border:`1px solid ${GROUP_C[libModal.group]||"#334155"}`}},h(PostureSVG,{pose:libModal.pose,color:GROUP_C[libModal.group]||"#64748b",size:80})),
+          h("div",{style:{flex:1}},
+            h("div",{style:{fontSize:16,fontWeight:700,color:"#f1f5f9",marginBottom:4}},libModal.name),
+            h("div",{style:{display:"flex",flexWrap:"wrap",gap:4,marginBottom:6}},
+              h("span",{style:{background:GROUP_C[libModal.group]||"#334155",color:"#fff",borderRadius:4,padding:"2px 8px",fontSize:11,fontWeight:700}},libModal.muscle),
+              h("span",{style:{background:"#334155",color:"#94a3b8",borderRadius:4,padding:"2px 8px",fontSize:11}},libModal.secondary),
+              h("span",{style:{background:libModal.equip==="Gym"?"#1e3a5f":"#14532d",color:libModal.equip==="Gym"?"#93c5fd":"#86efac",borderRadius:4,padding:"2px 8px",fontSize:11}},`${libModal.equipIcon} ${libModal.equip}`),
+              h("span",{style:{color:DIFF_C[libModal.diff],fontSize:11,fontWeight:700,padding:"2px 4px"}},libModal.diff)
+            ),
+            h("div",{style:{background:"#0f172a",borderRadius:6,padding:"8px 10px"}},
+              h("div",{style:{fontSize:11,color:"#475569",marginBottom:2}},"TÉCNICA"),
+              h("div",{style:{fontSize:12,color:"#94a3b8"}},libModal.tips)
+            )
+          )
+        ),
+        swapTarget&&h("button",{onClick:()=>swapEx(libModal),style:{width:"100%",background:"#7c3aed",color:"#fff",border:"none",borderRadius:8,padding:"12px",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:8}},"↔ Usar como reemplazo"),
+        addTarget&&h("button",{onClick:()=>addExFromLib(libModal),style:{width:"100%",background:pColor,color:"#fff",border:"none",borderRadius:8,padding:"12px",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:8}},"+ Agregar al entrenamiento"),
+        h("button",{onClick:()=>setLibModal(null),style:{width:"100%",background:"#334155",color:"#94a3b8",border:"none",borderRadius:8,padding:"10px",fontSize:13,cursor:"pointer"}},"Cerrar")
+      )
+    ),
+
+    isLibraryAction&&h("div",{style:{position:"sticky",top:0,background:"#7c3aed",padding:"10px 16px",zIndex:50,display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      h("span",{style:{fontSize:13,fontWeight:700}},swapTarget?"↔ Elige ejercicio de reemplazo":"+ Elige ejercicio para agregar"),
+      h("button",{onClick:()=>{setSwapTarget(null);setAddTarget(null);},style:{background:"none",border:"none",color:"#fff",fontSize:18,cursor:"pointer"}},"✕")
+    ),
+
+    // HEADER
+    h("div",{style:{background:"#1e293b",padding:"10px 16px",borderBottom:"1px solid #334155"}},
+      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+        h("div",{style:{display:"flex",alignItems:"center",gap:10}},
+          h("button",{onClick:()=>setProfile(null),style:{background:"none",border:"none",color:"#64748b",fontSize:18,cursor:"pointer",padding:0}},"←"),
+          h("div",null,
+            h("div",{style:{fontSize:16,fontWeight:700,color:"#f1f5f9"}},`${PROFILES[profile].emoji} ${PROFILES[profile].name}`),
+            h("div",{style:{fontSize:10,color:syncStatus==="saved"?"#22c55e":syncStatus==="error"?"#ef4444":"#64748b"}},
+              syncing?"⏳ Cargando...":syncStatus==="saved"?"☁️ Guardado":syncStatus==="error"?"⚠️ Sin conexión":sessionDate
+            )
+          )
+        ),
+        h("div",{style:{textAlign:"right"}},
+          h("div",{style:{fontSize:22,fontWeight:800,color:pct===100?"#22c55e":pColor}},`${pct}%`),
+          h("div",{style:{fontSize:10,color:"#64748b"}},`${done}/${total} series`)
+        )
+      ),
+      h("div",{style:{marginTop:8,background:"#334155",borderRadius:4,height:5}},
+        h("div",{style:{width:`${pct}%`,background:pct===100?"#22c55e":pColor,height:5,borderRadius:4,transition:"width 0.4s"}})
+      )
+    ),
+
+    // TABS
+    h("div",{style:{display:"flex",background:"#1e293b",borderBottom:"1px solid #334155",overflowX:"auto"}},
+      [["today","Sesión"],["library","Biblioteca"],["stats","Stats"],["timer","⏱"],["history","Historial"]].map(([k,l])=>
+        h("button",{key:k,onClick:()=>setTab(k),style:{flex:"none",padding:"10px 14px",background:"none",border:"none",color:tab===k?pColor:"#64748b",fontWeight:tab===k?700:400,fontSize:13,cursor:"pointer",borderBottom:tab===k?`2px solid ${pColor}`:"2px solid transparent",whiteSpace:"nowrap"}},l)
+      )
+    ),
+
+    // ── SESSION ──
+    tab==="today"&&h("div",{style:{padding:12}},
+      h("div",{style:{display:"flex",gap:8,marginBottom:10,alignItems:"center"}},
+        h("select",{value:activeDay,onChange:e=>setActiveDay(e.target.value),style:{flex:1,background:"#1e293b",color:"#f1f5f9",border:"1px solid #334155",borderRadius:6,padding:"8px",fontSize:12}},
+          Object.keys(plan).map(d=>h("option",{key:d,value:d},plan[d].label||d))
+        ),
+        h("input",{type:"date",value:sessionDate,onChange:e=>setSessionDate(e.target.value),style:{background:"#1e293b",color:"#94a3b8",border:"1px solid #334155",borderRadius:6,padding:"7px 5px",fontSize:11}})
+      ),
+      h("div",{style:{display:"flex",gap:6,marginBottom:12}},
+        h("button",{onClick:()=>setEditMode(!editMode),style:{background:editMode?"#7c3aed":"#334155",color:"#fff",border:"none",borderRadius:6,padding:"7px 12px",fontSize:12,cursor:"pointer"}},editMode?"✓ Listo":"✏️ Editar"),
+        h("button",{onClick:()=>{setAddTarget("newBlock");setTab("library");},style:{background:"#0f4c75",color:"#fff",border:"none",borderRadius:6,padding:"7px 12px",fontSize:12,cursor:"pointer"}},"+ Bloque")
+      ),
+      activeDay&&plan[activeDay]&&plan[activeDay].blocks.map((block,bIdx)=>
+        h("div",{key:bIdx,style:{marginBottom:14}},
+          h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}},
+            h("div",{style:{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:1}},block.name),
+            editMode&&h("button",{onClick:()=>{setAddTarget({dayKey:activeDay,blockIdx:bIdx});setTab("library");},style:{background:"#0f4c75",color:"#93c5fd",border:"1px solid #1e40af",borderRadius:5,padding:"3px 8px",fontSize:11,cursor:"pointer"}},"+ ej.")
+          ),
+          block.exercises.map((ex,eIdx)=>{
+            const allDone=Array.from({length:ex.sets},(_,i)=>getSet(ex.id,i).done).every(Boolean);
+            const le=LIBRARY.find(l=>l.id===ex.libId);
+            const gc=le?GROUP_C[le.group]||"#64748b":"#64748b";
+            return h("div",{key:ex.id,style:{background:"#1e293b",borderRadius:10,marginBottom:8,overflow:"hidden",border:`1px solid ${allDone?"#166534":"#334155"}`,borderLeft:`3px solid ${gc}`}},
+              h("div",{style:{padding:"8px 10px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #334155"}},
+                h("div",{style:{display:"flex",alignItems:"center",gap:8,flex:1,minWidth:0}},
+                  le&&h("div",{style:{flexShrink:0,background:"#0f172a",borderRadius:6,padding:3}},h(PostureSVG,{pose:le.pose,color:gc,size:36})),
+                  h("div",{style:{minWidth:0}},
+                    h("div",{style:{fontSize:12,fontWeight:700,color:allDone?"#86efac":"#f1f5f9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},`${allDone?"✓ ":""}${ex.name}`),
+                    le&&h("div",{style:{fontSize:10,color:"#64748b"}},`${le.muscle} · ${le.equipIcon}`)
+                  )
+                ),
+                h("div",{style:{display:"flex",gap:4,alignItems:"center",flexShrink:0,marginLeft:6}},
+                  editMode?[
+                    h("input",{key:"s",value:ex.sets,onChange:e=>updEx(activeDay,bIdx,eIdx,"sets",e.target.value),type:"number",min:"1",style:{width:32,background:"#0f172a",color:"#f1f5f9",border:"1px solid #475569",borderRadius:4,padding:"3px",fontSize:12,textAlign:"center"}}),
+                    h("span",{key:"x",style:{color:"#64748b",fontSize:11}},"×"),
+                    h("input",{key:"r",value:ex.reps,onChange:e=>updEx(activeDay,bIdx,eIdx,"reps",e.target.value),style:{width:48,background:"#0f172a",color:"#f1f5f9",border:"1px solid #475569",borderRadius:4,padding:"3px",fontSize:11,textAlign:"center"}}),
+                    h("button",{key:"sw",onClick:()=>{setSwapTarget({dayKey:activeDay,blockIdx:bIdx,exIdx:eIdx});setTab("library");},style:{background:"#7c3aed",border:"none",color:"#fff",borderRadius:4,padding:"4px 6px",fontSize:11,cursor:"pointer"}},"↔"),
+                    h("button",{key:"dl",onClick:()=>delEx(activeDay,bIdx,eIdx),style:{background:"#7f1d1d",border:"none",color:"#fca5a5",borderRadius:4,padding:"4px 6px",fontSize:11,cursor:"pointer"}},"✕"),
+                  ]:[
+                    h("span",{key:"info",style:{fontSize:11,color:"#64748b"}},`${ex.sets}×${ex.reps}`),
+                    h("button",{key:"t",onClick:()=>{setTimerSecs(ex.rest||60);setTab("timer");},style:{background:"#0f172a",border:"1px solid #334155",color:"#64748b",borderRadius:5,padding:"3px 6px",fontSize:11,cursor:"pointer"}},`⏱${ex.rest}s`),
+                  ]
+                )
+              ),
+              le&&!editMode&&h("div",{style:{padding:"5px 10px 2px",fontSize:10,color:"#475569",fontStyle:"italic"}},`💡 ${le.tips}`),
+              h("div",{style:{padding:"6px 10px 10px"}},
+                Array.from({length:ex.sets},(_,si)=>{
+                  const sl=getSet(ex.id,si);
+                  return h("div",{key:si,style:{display:"flex",gap:5,alignItems:"center",marginBottom:si<ex.sets-1?5:0}},
+                    h("button",{onClick:()=>togDone(ex.id,si),style:{width:24,height:24,borderRadius:"50%",border:`2px solid ${sl.done?"#22c55e":"#475569"}`,background:sl.done?"#22c55e":"transparent",color:"#fff",fontSize:12,cursor:"pointer",flexShrink:0}},sl.done?"✓":""),
+                    h("span",{style:{fontSize:10,color:"#64748b",width:14,flexShrink:0}},`S${si+1}`),
+                    h("input",{placeholder:"Reps",value:sl.reps,onChange:e=>updSet(ex.id,si,"reps",e.target.value),style:{width:46,background:"#0f172a",color:"#f1f5f9",border:"1px solid #334155",borderRadius:5,padding:"4px",fontSize:11,textAlign:"center"}}),
+                    h("input",{placeholder:"carga",value:sl.weight,onChange:e=>updSet(ex.id,si,"weight",e.target.value),style:{width:56,background:"#0f172a",color:"#f1f5f9",border:"1px solid #334155",borderRadius:5,padding:"4px",fontSize:11,textAlign:"center"}}),
+                    h("input",{placeholder:"nota",value:sl.note,onChange:e=>updSet(ex.id,si,"note",e.target.value),style:{flex:1,background:"#0f172a",color:"#64748b",border:"1px solid #334155",borderRadius:5,padding:"4px",fontSize:10}})
+                  );
+                })
+              )
+            );
+          })
+        )
+      )
+    ),
+
+    // ── LIBRARY ──
+    tab==="library"&&h("div",{style:{padding:12}},
+      h("input",{placeholder:"🔍 Buscar ejercicio...",value:libSearch,onChange:e=>setLibSearch(e.target.value),style:{width:"100%",background:"#1e293b",color:"#f1f5f9",border:"1px solid #334155",borderRadius:8,padding:"9px 12px",fontSize:13,boxSizing:"border-box",marginBottom:8}}),
+      h("div",{style:{display:"flex",gap:4,overflowX:"auto",marginBottom:6,paddingBottom:2}},
+        GROUPS.map(g=>h("button",{key:g,onClick:()=>setLibGroup(g),style:{flexShrink:0,background:libGroup===g?(GROUP_C[g]||"#3b82f6"):"#1e293b",color:libGroup===g?"#fff":"#94a3b8",border:`1px solid ${libGroup===g?(GROUP_C[g]||"#3b82f6"):"#334155"}`,borderRadius:20,padding:"5px 10px",fontSize:11,cursor:"pointer"}},g))
+      ),
+      h("div",{style:{display:"flex",gap:4,marginBottom:10}},
+        EQUIP_FILTER.map(e=>h("button",{key:e,onClick:()=>setLibEquip(e),style:{flexShrink:0,background:libEquip===e?"#334155":"#1e293b",color:libEquip===e?"#f1f5f9":"#64748b",border:`1px solid ${libEquip===e?"#475569":"#334155"}`,borderRadius:20,padding:"4px 10px",fontSize:11,cursor:"pointer"}},e))
+      ),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}},
+        filteredLib.map(ex=>{
+          const gc=GROUP_C[ex.group]||"#64748b";
+          return h("button",{key:ex.id,onClick:()=>setLibModal(ex),style:{background:"#1e293b",border:"1px solid #334155",borderRadius:10,padding:"10px 8px",cursor:"pointer",textAlign:"center",borderTop:`3px solid ${gc}`}},
+            h("div",{style:{background:"#0f172a",borderRadius:8,padding:6,marginBottom:6,display:"inline-block"}},h(PostureSVG,{pose:ex.pose,color:gc,size:60})),
+            h("div",{style:{fontSize:11,fontWeight:700,color:"#f1f5f9",lineHeight:1.3,marginBottom:2}},ex.name),
+            h("div",{style:{fontSize:10,color:gc,fontWeight:600}},ex.group),
+            h("div",{style:{fontSize:9,color:"#64748b",marginTop:2}},`${ex.equipIcon} ${ex.equip} · `,h("span",{style:{color:DIFF_C[ex.diff]}},ex.diff))
+          );
+        })
+      )
+    ),
+
+    // ── STATS ──
+    tab==="stats"&&h("div",{style:{padding:16}},
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}},
+        [["Hoy",pct],["Semana",Math.min(100,Math.round(Object.keys(log).filter(k=>weekKey(k.split("__")[0])===weekKey(sessionDate)&&log[k].done).length/Math.max(1,Object.keys(log).filter(k=>weekKey(k.split("__")[0])===weekKey(sessionDate)).length)*100))],["Mes",Math.min(100,Math.round(Object.keys(log).filter(k=>monthKey(k.split("__")[0])===monthKey(sessionDate)&&log[k].done).length/Math.max(1,Object.keys(log).filter(k=>monthKey(k.split("__")[0])===monthKey(sessionDate)).length)*100))]].map(([l,v])=>
+          h("div",{key:l,style:{background:"#1e293b",borderRadius:10,padding:10,border:"1px solid #334155",textAlign:"center"}},
+            h("svg",{viewBox:"0 0 56 56",width:"56",height:"56",style:{margin:"0 auto 4px",display:"block"}},
+              h("circle",{cx:"28",cy:"28",r:"22",fill:"none",stroke:"#334155",strokeWidth:"5"}),
+              h("circle",{cx:"28",cy:"28",r:"22",fill:"none",stroke:pColor,strokeWidth:"5",strokeDasharray:`${2*Math.PI*22}`,strokeDashoffset:`${2*Math.PI*22*(1-v/100)}`,strokeLinecap:"round",transform:"rotate(-90 28 28)"}),
+              h("text",{x:"28",y:"33",textAnchor:"middle",fill:pColor,fontSize:"11",fontWeight:"bold"},`${v}%`)
+            ),
+            h("div",{style:{fontSize:12,fontWeight:600,color:"#f1f5f9"}},l)
+          )
+        )
+      ),
+      h("div",{style:{background:"#1e293b",borderRadius:10,padding:14,border:"1px solid #334155"}},
+        h("div",{style:{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:1,marginBottom:10}},"Frecuencia por grupo muscular"),
+        Object.keys(mFreq).length===0?h("div",{style:{fontSize:12,color:"#475569"}},"Registra sesiones para ver datos."):
+        Object.entries(mFreq).sort((a,b)=>b[1]-a[1]).map(([m,v])=>{
+          const max=Math.max(...Object.values(mFreq));const c=GROUP_C[m]||"#64748b";
+          return h("div",{key:m,style:{display:"flex",alignItems:"center",gap:8,marginBottom:7}},
+            h("div",{style:{width:65,fontSize:11,color:"#94a3b8",flexShrink:0}},m),
+            h("div",{style:{flex:1,background:"#334155",borderRadius:4,height:14}},h("div",{style:{width:`${Math.round(v/max*100)}%`,background:c,height:14,borderRadius:4,minWidth:4}})),
+            h("div",{style:{fontSize:11,color:c,width:24,textAlign:"right",flexShrink:0}},v)
+          );
+        })
+      )
+    ),
+
+    // ── TIMER ──
+    tab==="timer"&&h("div",{style:{padding:16}},
+      h("div",{style:{background:"#1e293b",borderRadius:12,padding:20,border:"1px solid #334155",marginBottom:12,textAlign:"center"}},
+        h("div",{style:{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:2,marginBottom:10}},"DESCANSO"),
+        h("div",{style:{fontSize:76,fontWeight:800,color:timerColor,fontVariantNumeric:"tabular-nums",lineHeight:1}},fmt(timerLeft!=null?timerLeft:timerSecs)),
+        h("div",{style:{display:"flex",gap:6,justifyContent:"center",marginTop:12,flexWrap:"wrap"}},
+          [30,45,60,90,120].map(s=>h("button",{key:s,onClick:()=>{setTimerSecs(s);setTimerLeft(null);},style:{background:timerSecs===s?pColor:"#334155",color:"#f1f5f9",border:"none",borderRadius:6,padding:"6px 12px",fontSize:12,cursor:"pointer"}},`${s}s`))
+        ),
+        h("div",{style:{display:"flex",gap:8,justifyContent:"center",marginTop:14}},
+          !timerRunning?h("button",{onClick:()=>{setTimerLeft(timerSecs);setTimerRunning(true);beep(getAudio());},style:{background:"#22c55e",color:"#fff",border:"none",borderRadius:8,padding:"12px 32px",fontSize:16,fontWeight:700,cursor:"pointer"}},"▶ Iniciar"):
+          h("button",{onClick:()=>setTimerRunning(false),style:{background:"#f59e0b",color:"#fff",border:"none",borderRadius:8,padding:"12px 32px",fontSize:16,fontWeight:700,cursor:"pointer"}},"⏸ Pausa"),
+          h("button",{onClick:()=>{setTimerRunning(false);setTimerLeft(timerSecs);},style:{background:"#334155",color:"#f1f5f9",border:"none",borderRadius:8,padding:"12px 20px",fontSize:16,cursor:"pointer"}},"↺")
+        )
+      ),
+      h("div",{style:{background:"#1e293b",borderRadius:12,padding:20,border:"1px solid #334155",textAlign:"center"}},
+        h("div",{style:{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:2,marginBottom:10}},"CRONÓMETRO"),
+        h("div",{style:{fontSize:76,fontWeight:800,color:"#8b5cf6",fontVariantNumeric:"tabular-nums",lineHeight:1}},fmt(sw)),
+        h("div",{style:{display:"flex",gap:8,justifyContent:"center",marginTop:14}},
+          !swOn?h("button",{onClick:()=>{setSwOn(true);beep(getAudio());},style:{background:"#8b5cf6",color:"#fff",border:"none",borderRadius:8,padding:"12px 32px",fontSize:16,fontWeight:700,cursor:"pointer"}},"▶ Iniciar"):
+          h("button",{onClick:()=>setSwOn(false),style:{background:"#f59e0b",color:"#fff",border:"none",borderRadius:8,padding:"12px 32px",fontSize:16,fontWeight:700,cursor:"pointer"}},"⏸ Pausa"),
+          h("button",{onClick:()=>{setSwOn(false);setSw(0);},style:{background:"#334155",color:"#f1f5f9",border:"none",borderRadius:8,padding:"12px 20px",fontSize:16,cursor:"pointer"}},"↺")
+        )
+      )
+    ),
+
+    // ── HISTORY ──
+    tab==="history"&&h("div",{style:{padding:16}},
+      h("div",{style:{display:"flex",gap:4,marginBottom:14,background:"#1e293b",borderRadius:8,padding:4,border:"1px solid #334155"}},
+        [["fecha","📅 Por fecha"],["musculo","💪 Por grupo"]].map(([k,l])=>h("button",{key:k,onClick:()=>setHistView(k),style:{flex:1,background:histView===k?pColor:"transparent",color:histView===k?"#fff":"#64748b",border:"none",borderRadius:6,padding:"8px",fontSize:13,fontWeight:histView===k?700:400,cursor:"pointer"}},l))
+      ),
+      histView==="fecha"&&h("div",null,
+        sessionDates.length===0?h("div",{style:{color:"#475569",fontSize:13}},"Sin sesiones aún."):
+        sessionDates.map(date=>{
+          const muscles=getSessionMuscles(date);
+          const sd=allLogKeys.filter(k=>k.startsWith(date)&&log[k].done).length;
+          const days=[...new Set(allLogKeys.filter(k=>k.startsWith(date)).map(k=>k.split("__")[1]))];
+          return h("div",{key:date,style:{background:"#1e293b",borderRadius:10,padding:12,marginBottom:8,border:"1px solid #334155"}},
+            h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}},
+              h("div",null,h("div",{style:{fontSize:14,fontWeight:700,color:"#f1f5f9"}},date),h("div",{style:{fontSize:11,color:"#64748b"}},days.join(", "))),
+              h("div",{style:{textAlign:"right"}},h("div",{style:{fontSize:20,fontWeight:800,color:"#22c55e"}},sd),h("div",{style:{fontSize:10,color:"#64748b"}},"series ✓"))
+            ),
+            muscles.length>0&&h("div",{style:{display:"flex",flexWrap:"wrap",gap:4}},muscles.map(m=>h("span",{key:m,style:{background:GROUP_C[m]||"#334155",color:"#fff",borderRadius:4,padding:"2px 8px",fontSize:10,fontWeight:600}},m)))
+          );
+        })
+      ),
+      histView==="musculo"&&h("div",null,
+        Object.keys(mFreq).length===0?h("div",{style:{color:"#475569",fontSize:13}},"Sin datos aún."):
+        Object.entries(muscleHistory()).sort((a,b)=>b[1].length-a[1].length).map(([m,dates])=>{
+          const c=GROUP_C[m]||"#64748b";
+          const last=dates[0];
+          const daysSince=Math.round((new Date(TODAY())-new Date(last))/(1000*60*60*24));
+          return h("div",{key:m,style:{background:"#1e293b",borderRadius:10,padding:12,marginBottom:8,border:"1px solid #334155",borderLeft:`4px solid ${c}`}},
+            h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}},
+              h("div",{style:{fontSize:14,fontWeight:700,color:"#f1f5f9"}},m),
+              h("div",{style:{textAlign:"right"}},h("div",{style:{fontSize:11,color:daysSince>7?"#f59e0b":"#22c55e",fontWeight:600}},`hace ${daysSince}d`),h("div",{style:{fontSize:10,color:"#64748b"}},`${dates.length} sesiones`))
+            ),
+            h("div",{style:{display:"flex",gap:3,flexWrap:"wrap"}},
+              dates.slice(0,8).map((d,i)=>h("span",{key:i,style:{background:"#0f172a",border:`1px solid ${c}`,color:"#94a3b8",borderRadius:4,padding:"2px 6px",fontSize:10}},d.slice(5))),
+              dates.length>8&&h("span",{style:{color:"#64748b",fontSize:10,padding:"2px 4px"}},`+${dates.length-8}`)
+            )
+          );
+        })
+      )
+    )
+  );
+}
+
+createRoot(document.getElementById("root")).render(h(App,null));
+</script>
+</body>
+</html>
