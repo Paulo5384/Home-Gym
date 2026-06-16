@@ -237,6 +237,7 @@ function App(){
   const [histView,setHistView]=useState("fecha");
   const [syncing,setSyncing]=useState(false);
   const [syncStatus,setSyncStatus]=useState("");
+  const [debugMsg,setDebugMsg]=useState("");
   const audioCtx=useRef(null);
   const timerRef=useRef(null);
   const swRef=useRef(null);
@@ -269,6 +270,7 @@ function App(){
         }
         setPlan(lp);setLog(ll);setActiveDay(Object.keys(lp)[0]||"");
       }catch(e){
+        setDebugMsg(`❌ Error: ${e.message}`);
         console.error("Firebase load error:", e);
         const sp=localStorage.getItem(`hg_plan_${profile}`);
         const sl=localStorage.getItem(`hg_log_${profile}`);
@@ -399,7 +401,8 @@ function App(){
             h("div",{style:{fontSize:16,fontWeight:700,color:"#f1f5f9"}},`${PROFILES[profile].emoji} ${PROFILES[profile].name}`),
             h("div",{style:{fontSize:10,color:syncStatus==="saved"?"#22c55e":syncStatus==="error"?"#ef4444":"#64748b"}},
               syncing?"⏳ Cargando...":syncStatus==="saved"?"☁️ Guardado":syncStatus==="error"?"⚠️ Sin conexión":sessionDate
-            )
+            ),
+            debugMsg&&h("div",{style:{fontSize:9,color:"#f59e0b",marginTop:2}},debugMsg)
           )
         ),
         h("div",{style:{textAlign:"right"}},
