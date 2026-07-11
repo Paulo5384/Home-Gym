@@ -11,7 +11,8 @@ button{cursor:pointer;font-family:inherit;}
 input,select{font-family:inherit;}
 .screen{display:none;}.screen.active{display:block;}
 /* Profile */
-#profile-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+#profile-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;position:fixed;inset:0;background:#0f172a;z-index:100;overflow-y:auto;}
+#app-screen{position:fixed;inset:0;overflow-y:auto;}
 .profile-btn{width:100%;max-width:320px;background:#1e293b;border-radius:14px;padding:20px;margin-bottom:16px;border:2px solid #334155;text-align:left;}
 .profile-btn .emoji{font-size:28px;display:block;margin-bottom:6px;}
 .profile-btn .name{font-size:20px;font-weight:800;color:#f1f5f9;display:block;}
