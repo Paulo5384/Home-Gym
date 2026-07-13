@@ -9,10 +9,10 @@
 body{background:#0f172a;font-family:system-ui,-apple-system,sans-serif;color:#e2e8f0;max-width:480px;margin:0 auto;min-height:100vh;}
 button{cursor:pointer;font-family:inherit;}
 input,select{font-family:inherit;}
-.screen{display:none;}.screen.active{display:block;}
+
 /* Profile */
-#profile-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;position:fixed;inset:0;background:#0f172a;z-index:100;overflow-y:auto;}
-#app-screen{position:fixed;inset:0;overflow-y:auto;}
+#profile-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+#app-screen{display:none;}
 .profile-btn{width:100%;max-width:320px;background:#1e293b;border-radius:14px;padding:20px;margin-bottom:16px;border:2px solid #334155;text-align:left;}
 .profile-btn .emoji{font-size:28px;display:block;margin-bottom:6px;}
 .profile-btn .name{font-size:20px;font-weight:800;color:#f1f5f9;display:block;}
@@ -922,7 +922,11 @@ document.querySelectorAll(".tab-btn").forEach(b=>b.onclick=()=>setTab(b.dataset.
 // ── EVENT LISTENERS ───────────────────────────────────────────
 $("btn-paulo").onclick=()=>startProfile("paulo");
 $("btn-caro").onclick=()=>startProfile("caro");
-$("back-btn").onclick=()=>{ $("profile-screen").classList.add("active"); $("app-screen").classList.remove("active"); profile=null; };
+$("back-btn").onclick=()=>{
+  $("profile-screen").style.display="flex";
+  $("app-screen").style.display="none";
+  profile=null;
+};
 $("edit-btn").onclick=()=>{ editMode=!editMode; $("edit-btn").textContent=editMode?"✓ Listo":"✏️ Editar"; $("edit-btn").className="btn btn-edit"+(editMode?" active":""); renderBlocks(); };
 $("add-block-btn").onclick=()=>{ addTarget="newBlock"; openLibraryForAction(); };
 $("day-select").onchange=e=>{ activeDay=e.target.value; renderBlocks(); updateProgress(); };
@@ -939,8 +943,9 @@ async function startProfile(p){
   profile=p;
   sessionDate=today();
   editMode=false;
-  $("profile-screen").classList.remove("active");
-  $("app-screen").classList.add("active");
+  $("profile-screen").style.display="none";
+  $("app-screen").style.display="block";
+  window.scrollTo(0,0);
   setTab("session");
   await loadFromFirebase();
 }
